@@ -1,3 +1,4 @@
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <asm/types.h>
@@ -213,7 +214,7 @@ int read_arp(int fd)
 
 /* Sample code that sends an ARP who-has request on interface <ifname> to IPv4 address <ip>.Returns 0 on success. */
 
-int test_arping(const char *ifname, const char *ip)
+int test_arping(const char *ifname, const char *ip, int timeout_seconds)
 {
     uint32_t dst = inet_addr(ip);
     if (dst == INADDR_NONE) {
@@ -241,19 +242,53 @@ int test_arping(const char *ifname, const char *ip)
         return -1;
     }
 
-    while (read_arp(arp_fd) != 0);
+    /* Set up select with timeout */
+    struct timeval timeout;
+    timeout.tv_sec = timeout_seconds;
+    timeout.tv_usec = 0;
+
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(arp_fd, &readfds);
+
+    /* Use select() to wait for an ARP reply with the given timeout */
+    int ret = select(arp_fd + 1, &readfds, NULL, NULL, &timeout);
     
-    LOG_INFO("Received ARP reply");
+    if (ret == -1) {
+        LOG_ERROR("select() failed");
+        close(arp_fd);
+        return -1;
+    } else if (ret == 0) {
+        LOG_ERROR("Timeout waiting for ARP reply");
+        close(arp_fd);
+        return -1;
+    }
+
+    /* If select() returns positive, read the ARP reply */
+    if (FD_ISSET(arp_fd, &readfds)) {
+        if (read_arp(arp_fd) == 0) {
+            LOG_INFO("Received ARP reply");
+        } else {
+            LOG_ERROR("Failed to read ARP reply");
+        }
+    }
+
     close(arp_fd);
     return 0;
 }
 
 int main(int argc, const char **argv)
 {
-    if (argc != 3) {
-        LOG_ERROR("Usage: %s <INTERFACE> <DEST_IP>", argv[0]);
+    if (argc != 4) {
+        LOG_ERROR("Usage: %s <INTERFACE> <DEST_IP> <TIMEOUT_SECONDS>", argv[0]);
         return 1;
     }
 
-    return test_arping(argv[1], argv[2]);
+    int timeout_seconds = atoi(argv[3]);
+    if (timeout_seconds <= 0) {
+        LOG_ERROR("Invalid timeout value, must be a positive integer.");
+        return 1;
+    }
+
+    return test_arping(argv[1], argv[2], timeout_seconds);
 }
