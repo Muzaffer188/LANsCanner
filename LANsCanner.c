@@ -270,6 +270,7 @@ int test_arping(const char *ifname, const char *ip, int timeout_seconds)
             LOG_INFO("Received ARP reply");
         } else {
             LOG_ERROR("Failed to read ARP reply");
+            return -1;
         }
     }
 
@@ -277,18 +278,58 @@ int test_arping(const char *ifname, const char *ip, int timeout_seconds)
     return 0;
 }
 
+void scan_ip_range(const char *ifname, const char *start_ip, const char *end_ip, int timeout_seconds)
+{
+    struct in_addr start, end;
+    
+    if (inet_pton(AF_INET, start_ip, &start) != 1) {
+        LOG_ERROR("Invalid start IP address");
+        return;
+    }
+
+    if (inet_pton(AF_INET, end_ip, &end) != 1) {
+        LOG_ERROR("Invalid end IP address");
+        return;
+    }
+
+    /* Loop over the IP range */
+    uint32_t current_ip = ntohl(start.s_addr);
+    uint32_t end_ip_int = ntohl(end.s_addr);
+
+    while (current_ip <= end_ip_int) {
+        struct in_addr ip;
+        ip.s_addr = htonl(current_ip);
+        char ip_str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &ip, ip_str, INET_ADDRSTRLEN);
+
+        LOG_INFO("Pinging IP: %s", ip_str);
+
+        /* Call test_arping for the current IP address */
+        int result = test_arping(ifname, ip_str, timeout_seconds);
+        if (result == 0) {
+            LOG_INFO("Active: %s", ip_str); /* IP is active */
+        } else {
+            LOG_INFO("Inactive: %s", ip_str); /* IP is inactive */
+        }
+
+        current_ip++;
+    }
+}
+
 int main(int argc, const char **argv)
 {
     if (argc != 4) {
-        LOG_ERROR("Usage: %s <INTERFACE> <DEST_IP> <TIMEOUT_SECONDS>", argv[0]);
+        LOG_ERROR("Usage: %s <INTERFACE> <START_IP> <END_IP>", argv[0]);
         return 1;
     }
 
-    int timeout_seconds = atoi(argv[3]);
-    if (timeout_seconds <= 0) {
-        LOG_ERROR("Invalid timeout value, must be a positive integer.");
-        return 1;
-    }
+    const char *ifname = argv[1];
+    const char *start_ip = argv[2];
+    const char *end_ip = argv[3];
 
-    return test_arping(argv[1], argv[2], timeout_seconds);
+    int timeout_seconds = 3; /* You can change this when need more time. Recommend value is 3 */
+
+    scan_ip_range(ifname, start_ip, end_ip, timeout_seconds);
+
+    return 0;
 }
