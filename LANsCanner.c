@@ -204,8 +204,8 @@ int read_arp(int fd)
 
     struct in_addr sender_ip;
     memcpy(&sender_ip.s_addr, arp_resp->sender_ip, sizeof(uint32_t));
-    LOG_INFO("Sender IP: %s", inet_ntoa(sender_ip));
-    LOG_INFO("Sender MAC: %02X:%02X:%02X:%02X:%02X:%02X",
+    LOG_INFO("\033[0;36mSender IP: %s\033[0m", inet_ntoa(sender_ip));
+    LOG_INFO("\033[0;36mSender MAC: %02X:%02X:%02X:%02X:%02X:%02X\033[0m",
              arp_resp->sender_mac[0], arp_resp->sender_mac[1], arp_resp->sender_mac[2],
              arp_resp->sender_mac[3], arp_resp->sender_mac[4], arp_resp->sender_mac[5]);
 
@@ -267,7 +267,7 @@ int test_arping(const char *ifname, const char *ip, int timeout_seconds)
     /* If select() returns positive, read the ARP reply */
     if (FD_ISSET(arp_fd, &readfds)) {
         if (read_arp(arp_fd) == 0) {
-            LOG_INFO("Received ARP reply");
+            LOG_INFO("\033[0;36mReceived ARP reply\033[0m");
         } else {
             LOG_ERROR("Failed to read ARP reply");
             return -1;
@@ -307,9 +307,9 @@ void scan_ip_range(const char *ifname, const char *start_ip, const char *end_ip,
         /* Call test_arping for the current IP address */
         int result = test_arping(ifname, ip_str, timeout_seconds);
         if (result == 0) {
-            LOG_INFO("Active: %s", ip_str); /* IP is active */
+            LOG_INFO("\033[0;36mActive: %s\033[0m\n", ip_str); /* IP is active */
         } else {
-            LOG_INFO("Inactive: %s", ip_str); /* IP is inactive */
+            LOG_INFO("Inactive: %s\n", ip_str); /* IP is inactive */
         }
 
         current_ip++;
@@ -318,8 +318,17 @@ void scan_ip_range(const char *ifname, const char *start_ip, const char *end_ip,
 
 int main(int argc, const char **argv)
 {
+
+    printf("\n\033[31m███████╗██╗  ██╗██╗   ██╗     ███████╗███████╗ ██████╗    ██╗      █████╗ ███╗   ██╗    ███████╗ ██████╗ █████╗ ███╗   ██╗███╗   ██╗███████╗██████╗\033[0m\n");
+    printf("\033[31m██╔════╝██║ ██╔╝╚██╗ ██╔╝     ██╔════╝██╔════╝██╔════╝    ██║     ██╔══██╗████╗  ██║    ██╔════╝██╔════╝██╔══██╗████╗  ██║████╗  ██║██╔════╝██╔══██╗\n\033[0m");
+    printf("\033[31m███████╗█████╔╝  ╚████╔╝█████╗███████╗█████╗  ██║         ██║     ███████║██╔██╗ ██║    ███████╗██║     ███████║██╔██╗ ██║██╔██╗ ██║█████╗  ██████╔╝\033[0m\n");
+    printf("\033[31m╚════██║██╔═██╗   ╚██╔╝ ╚════╝╚════██║██╔══╝  ██║         ██║     ██╔══██║██║╚██╗██║    ╚════██║██║     ██╔══██║██║╚██╗██║██║╚██╗██║██╔══╝  ██╔══██╗\033[0m\n");
+    printf("\033[31m███████║██║  ██╗   ██║        ███████║███████╗╚██████╗    ███████╗██║  ██║██║ ╚████║    ███████║╚██████╗██║  ██║██║ ╚████║██║ ╚████║███████╗██║  ██║\033[0m\n");
+    printf("\033[31m╚══════╝╚═╝  ╚═╝   ╚═╝        ╚══════╝╚══════╝ ╚═════╝    ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝    ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝\033[0m\n\n");
+    
+
     if (argc != 4) {
-        LOG_ERROR("Usage: %s <INTERFACE> <START_IP> <END_IP>", argv[0]);
+        LOG_ERROR("\033[0;36mUsage: %s <INTERFACE> <START_IP> <END_IP>\033[0m", argv[0]);
         return 1;
     }
 
