@@ -86,7 +86,7 @@ This tool serves as:
 
 ### Examples with Photos  
 
-#### ![tool_running](https://github.com/user-attachments/assets/10b85e4b-0498-44ea-85f7-a1f1a3adae4d)  
+#### ![tool_running](https://github.com/skylab-kulubu/LANsCanner/blob/main/SKY-SEC_LAN_Scanner1.jpg)  
 The scanner outputs active IP addresses and their corresponding MAC addresses in real time.  
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>  
