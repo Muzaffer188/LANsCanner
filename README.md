@@ -74,12 +74,12 @@ This tool serves as:
 
    **Parameters:**  
    - `<INTERFACE>`: The network interface to use (e.g., eth0, wlan0).  
-   - `<START_IP>`: Starting IP address for the scan (e.g., 192.168.1.1).  
+   - `<START_IP>`: Starting IP address for the scan (e.g., 192.168.1.1).
    - `<END_IP>`: Ending IP address for the scan (e.g., 192.168.1.255).  
 
    **Example:**  
    ```bash
-   sudo ./arp_scanner wlan0 192.168.1.1 192.168.1.10  
+   sudo ./Lan_Scanner wlan0 192.168.1.1 192.168.1.10  
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>  
