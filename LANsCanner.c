@@ -2,10 +2,13 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <asm/types.h>
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
+
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 #include <linux/if_arp.h>
@@ -69,11 +72,16 @@ int get_if_ip4(int fd, const char *ifname, uint32_t *ip)
 {
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(struct ifreq));
-    if (strlen(ifname) >= IFNAMSIZ) {
+
+    uint64_t ifname_len;
+
+    if ((ifname_len = strlen(ifname)) >= IFNAMSIZ) {
         LOG_ERROR("Too long interface name");
         return -1;
     }
-    strcpy(ifr.ifr_name, ifname);
+
+    memcpy(ifr.ifr_name, ifname, ifname_len + 1);
+
     if (ioctl(fd, SIOCGIFADDR, &ifr) == -1) {
         perror("SIOCGIFADDR");
         return -1;
@@ -93,18 +101,22 @@ int get_if_info(const char *ifname, uint32_t *ip, char *mac, int *ifindex)
     }
 
     struct ifreq ifr;
-    if (strlen(ifname) >= IFNAMSIZ) {
+    uint64_t ifname_len;
+
+    if ((ifname_len = strlen(ifname)) >= IFNAMSIZ) {
         LOG_ERROR("Too long interface name");
         close(sd);
         return -1;
     }
 
-    strcpy(ifr.ifr_name, ifname);
+    memcpy(ifr.ifr_name, ifname, ifname_len + 1);
+
     if (ioctl(sd, SIOCGIFINDEX, &ifr) == -1) {
         perror("SIOCGIFINDEX");
         close(sd);
         return -1;
     }
+
     *ifindex = ifr.ifr_ifindex;
 
     if (ioctl(sd, SIOCGIFHWADDR, &ifr) == -1) {
@@ -112,6 +124,7 @@ int get_if_info(const char *ifname, uint32_t *ip, char *mac, int *ifindex)
         close(sd);
         return -1;
     }
+
     memcpy(mac, ifr.ifr_hwaddr.sa_data, MAC_LENGTH);
 
     if (get_if_ip4(sd, ifname, ip)) {
