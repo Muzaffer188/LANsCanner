@@ -191,7 +191,7 @@ int send_arp(int fd, int ifindex, const unsigned char *src_mac, uint32_t src_ip,
 
 int read_arp(int fd)
 {
-    unsigned char buffer[BUF_SIZE] = {0};
+    unsigned char buffer[BUF_SIZE];
     ssize_t length = recvfrom(fd, buffer, BUF_SIZE, 0, NULL, NULL);
     if (length == -1) {
         perror("recvfrom()");
