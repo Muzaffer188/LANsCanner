@@ -26,15 +26,15 @@
 #define LOG_INFO(msg, ...)   printf(msg "\n", ##__VA_ARGS__)
 
 struct arp_header {
-    unsigned short hardware_type;
-    unsigned short protocol_type;
-    unsigned char hardware_len;
-    unsigned char protocol_len;
-    unsigned short opcode;
-    unsigned char sender_mac[MAC_LENGTH];
-    unsigned char sender_ip[IPV4_LENGTH];
-    unsigned char target_mac[MAC_LENGTH];
-    unsigned char target_ip[IPV4_LENGTH];
+    uint16_t hardware_type;
+    uint16_t protocol_type;
+    uint8_t hardware_len;
+    uint8_t protocol_len;
+    uint16_t opcode;
+    uint8_t sender_mac[MAC_LENGTH];
+    uint8_t sender_ip[IPV4_LENGTH];
+    uint8_t target_mac[MAC_LENGTH];
+    uint8_t target_ip[IPV4_LENGTH];
 };
 
 /* Converts struct sockaddr with an IPv4 address to network byte order uin32_t. Returns 0 on success. */
@@ -92,9 +92,9 @@ int get_if_ip4(int fd, const char *ifname, uint32_t *ip)
 
 /* Gets interface information by name: IPv4, MAC, ifindex */
 
-int get_if_info(const char *ifname, uint32_t *ip, char *mac, int *ifindex)
+int32_t get_if_info(const char *ifname, uint32_t *ip, char *mac, int32_t *ifindex)
 {
-    int sd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
+    int32_t sd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
     if (sd <= 0) {
         perror("socket()");
         return -1;
@@ -138,7 +138,7 @@ int get_if_info(const char *ifname, uint32_t *ip, char *mac, int *ifindex)
 
 /* Creates a raw socket that listens for ARP traffic on specific ifindex. Writes out the socket's FD. Return 0 on success. */
 
-int bind_arp(int ifindex, int *fd)
+int32_t bind_arp(int32_t ifindex, int32_t *fd)
 {
     *fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
     if (*fd < 1) {
@@ -160,9 +160,9 @@ int bind_arp(int ifindex, int *fd)
 
 /* Sends an ARP who-has request to dst_ip on interface ifindex, using source mac src_mac and source ip src_ip. */
 
-int send_arp(int fd, int ifindex, const unsigned char *src_mac, uint32_t src_ip, uint32_t dst_ip)
+int32_t send_arp(int32_t fd, int32_t ifindex, const uint8_t *src_mac, uint32_t src_ip, uint32_t dst_ip)
 {
-    unsigned char buffer[42];
+    uint8_t buffer[42];
     struct sockaddr_ll socket_address;
     socket_address.sll_family = AF_PACKET;
     socket_address.sll_protocol = htons(ETH_P_ARP);
@@ -204,7 +204,7 @@ int send_arp(int fd, int ifindex, const unsigned char *src_mac, uint32_t src_ip,
 
 int read_arp(int fd)
 {
-    unsigned char buffer[BUF_SIZE];
+    uint8_t buffer[BUF_SIZE];
     ssize_t length = recvfrom(fd, buffer, BUF_SIZE, 0, NULL, NULL);
     if (length == -1) {
         perror("recvfrom()");
@@ -229,7 +229,7 @@ int read_arp(int fd)
 
 /* Sample code that sends an ARP who-has request on interface <ifname> to IPv4 address <ip>.Returns 0 on success. */
 
-int test_arping(const char *ifname, const char *ip, int timeout_seconds)
+int32_t test_arping(const char *ifname, const char *ip, int32_t timeout_seconds)
 {
     uint32_t dst = inet_addr(ip);
     if (dst == INADDR_NONE) {
@@ -238,14 +238,14 @@ int test_arping(const char *ifname, const char *ip, int timeout_seconds)
     }
 
     uint32_t src_ip;
-    int ifindex;
+    int32_t ifindex;
     char mac[MAC_LENGTH];
     if (get_if_info(ifname, &src_ip, mac, &ifindex)) {
         LOG_ERROR("Failed to get interface info");
         return -1;
     }
 
-    int arp_fd;
+    int32_t arp_fd;
     if (bind_arp(ifindex, &arp_fd)) {
         LOG_ERROR("Failed to bind ARP socket");
         return -1;
@@ -267,8 +267,8 @@ int test_arping(const char *ifname, const char *ip, int timeout_seconds)
     FD_SET(arp_fd, &readfds);
 
     /* Use select() to wait for an ARP reply with the given timeout */
-    int ret = select(arp_fd + 1, &readfds, NULL, NULL, &timeout);
-    
+    int32_t ret = select(arp_fd + 1, &readfds, NULL, NULL, &timeout);
+
     if (ret == -1) {
         LOG_ERROR("select() failed");
         close(arp_fd);
@@ -293,7 +293,7 @@ int test_arping(const char *ifname, const char *ip, int timeout_seconds)
     return 0;
 }
 
-void scan_ip_range(const char *ifname, const char *start_ip, const char *end_ip, int timeout_seconds)
+void scan_ip_range(const char *ifname, const char *start_ip, const char *end_ip, uint32_t timeout_seconds)
 {
     struct in_addr start, end;
     
@@ -320,7 +320,7 @@ void scan_ip_range(const char *ifname, const char *start_ip, const char *end_ip,
         LOG_INFO("Pinging IP: %s", ip_str);
 
         /* Call test_arping for the current IP address */
-        int result = test_arping(ifname, ip_str, timeout_seconds);
+        int32_t result = test_arping(ifname, ip_str, timeout_seconds);
         if (result == 0) {
             LOG_INFO("\033[0;36mActive: %s\033[0m\n", ip_str); /* IP is active */
         } else {
@@ -351,7 +351,7 @@ int main(int argc, const char **argv)
     const char *start_ip = argv[2];
     const char *end_ip = argv[3];
 
-    int timeout_seconds = 3; /* You can change this when need more time. Recommend value is 3 */
+    uint32_t timeout_seconds = 3; /* You can change this when need more time. Recommend value is 3 */
 
     scan_ip_range(ifname, start_ip, end_ip, timeout_seconds);
 
