@@ -149,13 +149,15 @@ int bind_arp(int ifindex, int *fd)
 
 int send_arp(int fd, int ifindex, const unsigned char *src_mac, uint32_t src_ip, uint32_t dst_ip)
 {
-    unsigned char buffer[BUF_SIZE] = {0};
-    struct sockaddr_ll socket_address = {0};
+    unsigned char buffer[42];
+    struct sockaddr_ll socket_address;
     socket_address.sll_family = AF_PACKET;
     socket_address.sll_protocol = htons(ETH_P_ARP);
     socket_address.sll_ifindex = ifindex;
     socket_address.sll_hatype = htons(ARPHRD_ETHER);
     socket_address.sll_pkttype = PACKET_BROADCAST;
+
+    memset(socket_address.sll_addr, 0, 8);
     socket_address.sll_halen = MAC_LENGTH;
 
     struct ethhdr *send_req = (struct ethhdr *)buffer;
